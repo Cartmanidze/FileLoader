@@ -1,12 +1,28 @@
-﻿using System;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace FileLoader
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var host = CreateHostBuilder(args).Build();
+            host.Run();
+        }
+
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var host = new HostBuilder();
+            host.ConfigureServices((hostContext, services) =>
+            {
+                var configuration = hostContext.Configuration;
+                services
+                   .AddHostedService<FileLoaderWorker>()
+                   .AddLogging();
+            });
+            return host;
         }
     }
 }
