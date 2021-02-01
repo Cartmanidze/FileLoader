@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FileLoader": {
+      "commandName": "Project",
+      "commandLineArgs": "--pathFrom D:\\\\qqq --pathTo %2Fbar%2F"
+    }
+  }
+}
