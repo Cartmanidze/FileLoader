@@ -1,13 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Net.Http;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FileLoader.Api
 {
-    public sealed class YandexDiskApiConnector : IYandexDiskApiConnector
+    internal sealed class YandexDiskApiConnector : IYandexDiskApiConnector
     {
         private readonly HttpClient _client;
 
@@ -19,15 +20,16 @@ namespace FileLoader.Api
             _logger = logger;
         }
 
-        public async Task UploadFile(string path, string url)
+        public async Task UploadFileAsync(FileInfo file, string path, CancellationToken token)
         {
             try
             {
-                var parameter = new { path, url };
-                var jsonParameter = JsonConvert.SerializeObject(parameter);
-                var httpContent = new StringContent(jsonParameter, Encoding.UTF8, "application/json");
-                var response = await _client.PostAsync(_client.BaseAddress, httpContent).ConfigureAwait(false);
+                var response = await _client.GetAsync($"{_client.BaseAddress}/disk/resources/upload/?path={path}{file.Name}", token).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
+                var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                var uploadFileResponse = JsonConvert.DeserializeObject<UploadFileResponse>(responseString);
+                var httpContent = GetDataContent(file);
+                await _client.PutAsync(uploadFileResponse.Href, httpContent, token).ConfigureAwait(false);
                 _logger.LogInformation("The file was uploaded");
             }
             catch (Exception ex)
@@ -36,5 +38,20 @@ namespace FileLoader.Api
                 throw;
             }
         }
+
+        public Task UploadFileAsync(FileInfo file, string path)
+        {
+            return UploadFileAsync(file, path, CancellationToken.None);
+        }
+
+        private MultipartFormDataContent GetDataContent(FileInfo file)
+        {
+            var content =
+                new MultipartFormDataContent();
+            FileStream fs = File.OpenRead(file.FullName);
+            content.Add(new StreamContent(fs), "file", Path.GetFileName(file.FullName));
+            return content;
+        }
     }
+
 }

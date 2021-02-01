@@ -1,17 +1,27 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FileLoader.Api
 {
     /// <summary>
     /// Connector for Yandex.Disk.API
     /// </summary>
-    public interface IYandexDiskApiConnector
+    internal interface IYandexDiskApiConnector
     {
         /// <summary>
-        /// Upload file
+        /// Upload file (async method)
         /// </summary>
+        /// <param name="file">File to send</param>
         /// <param name="path">The path where the resource will be placed</param>
-        /// <param name="url">The URL of the external resource to download</param>
-        Task UploadFile(string path, string url);
+        Task UploadFileAsync(FileInfo file, string path);
+
+        /// <summary>
+        /// Upload file (async method)
+        /// </summary>
+        /// <param name="file">File to send</param>
+        /// <param name="path">The path where the resource will be placed</param>
+        /// <param name="token">Cancellation token</param>
+        Task UploadFileAsync(FileInfo file, string path, CancellationToken token);
     }
 }
